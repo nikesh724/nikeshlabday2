@@ -101,7 +101,118 @@ attendance=int(input("enter a attendance:"))
 if score>=80 and attendance>=75:
     print("the eligible for the scholarship")
 else:
-     print("not eligible of the scholarship")    
+     print("not eligible of the scholarship")
+    #task13
+'''balance = int(input("enter a balance:"))
+amount = int(input("enter amount:"))
+if balance >= amount:
+    pin=str(input("enter a pin:"))
+    if pin =="1234":
+        print("transaction successfully")
+    else:
+        print("wrong pin")
+else:
+    print("insufficient balance")'''
+
+#task14
+'''username = str(input("enter a username:"))
+if username =="nikesh":
+    password =input("enter password:")
+    if password =="8248660":
+        otp =input("enter otp:")
+        if otp =="1111":
+            print("login successful")
+        else:
+            print("invalid otp")
+    else:
+        print("worng password")
+else:
+    print("wrong username")'''
+
+#task15
+'''doctor =input("doctor available (yes/no):")
+if doctor =="yes":
+    slot =input("slot available (yes/no):")
+    if slot =="yes":
+        print("appointment confirmed")
+    else:
+        print("no slot available")
+else:
+    print("doctor not available")'''
+
+#task16
+'''regis=input("regis (yes/no):")
+if regis =="yes":
+    fees =input("fees paid (yes/no):")
+    if fees =="yes":
+        print("access granded")
+    else:
+        print("pay fees")
+else:
+    print("not regis")'''
+
+#task17
+'''exp =int(input("enter a exp:"))
+if exp>=3:
+    rat = int(input("enter a rat:"))
+    if rat>=8:
+        print("bonus eligible")
+    else:
+        print("low rat")
+else:
+    print("not eligible")'''
+
+#task18
+'''ticket =input("ticket is available (yes/no):")
+if ticket =="yes":
+    fees = input("fees cleared (yes/no):")
+    if fees =="yes":
+        print("allow access")
+    else:
+        print("not fees cleared")
+else:
+    print("hall ticket is not available")'''
+
+#task19
+'''select =input("select for admission (yes/no):")
+if select =="yes":
+    room = input("room available (yes/no):")
+    if room =="yes":
+        print("allotted room")
+    else:
+        print("no room available")
+else:
+    print("admission not confirmed")'''
+
+#task20
+amount =float(input("enter purchase amount:"))
+member =input("premium member (yes/no):")
+if member =="yes" and amount>5000:
+    discount = amount * 20/100
+elif  member =="no" and amount>5000:
+    discount = amount * 10/100
+else:
+    discount = 0
+
+print("discount:",discount)
+print("final amount =",amount-discount)
+     
+    
+
+
+
+    
+
+
+
+
+        
+     
+    
+
+    
+
+
 
 
 
