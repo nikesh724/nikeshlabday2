@@ -1,0 +1,357 @@
+import tkinter as tk
+from tkinter import ttk, messagebox
+from datetime import datetime
+import random
+import qrcode
+import pyttsx3
+import webbrowser
+import urllib.parse
+from PIL import Image, ImageTk
+
+# PRODUCTS
+products = {
+    1: ("Aashirvaad Atta", 350),
+    2: ("Tata Salt", 30),
+    3: ("Amul Milk", 32),
+    4: ("Fortune Oil", 180),
+    5: ("Surf Excel", 120)
+}
+
+cart = []
+voice = pyttsx3.init()
+
+
+# ADD PRODUCT
+def add():
+    try:
+        pid = int(product.get().split(" - ")[0])
+        qty = int(quantity.get())
+
+        if qty <= 0:
+            raise ValueError
+
+        name, price = products[pid]
+        amount = price * qty
+        cart.append((name, qty, amount))
+
+        shopping.insert(
+            tk.END,
+            f"{name} x {qty} = Rs.{amount:.2f}\n"
+        )
+        update_total()
+
+    except:
+        messagebox.showerror("Error", "Enter valid quantity")
+
+
+# TOTAL
+def update_total():
+    subtotal = sum(x[2] for x in cart)
+    gst = subtotal * 0.05
+    grand = round(subtotal + gst)
+
+    sub.config(text=f"Subtotal    : Rs.{subtotal:.2f}")
+    tax.config(text=f"GST 5%      : Rs.{gst:.2f}")
+    total.config(text=f"Grand Total : Rs.{grand:.2f}")
+
+
+# GENERATE BILL
+def generate():
+    if not cart:
+        messagebox.showwarning("Warning", "Add product first")
+        return
+
+    name = customer.get().strip()
+    mobile = phone.get().strip()
+
+    if not name:
+        messagebox.showwarning("Warning", "Enter customer name")
+        return
+
+    if not mobile.isdigit() or len(mobile) != 10:
+        messagebox.showwarning("Warning", "Enter 10-digit mobile")
+        return
+
+    bill_id = random.randint(100000, 999999)
+    subtotal = sum(x[2] for x in cart)
+    gst = subtotal * 0.05
+    grand = round(subtotal + gst)
+
+    bill = f"""========== DMART BILL ==========
+
+Bill ID  : {bill_id}
+Customer : {name}
+Mobile   : {mobile}
+Date     : {datetime.now().strftime("%d-%m-%Y %H:%M:%S")}
+
+PRODUCTS
+--------------------------------
+"""
+
+    for pname, qty, amount in cart:
+        bill += f"{pname} x {qty} = Rs.{amount:.2f}\n"
+
+    bill += f"""--------------------------------
+Subtotal    : Rs.{subtotal:.2f}
+GST 5%      : Rs.{gst:.2f}
+Grand Total : Rs.{grand:.2f}
+
+Thank You! Visit Again.
+"""
+
+    # SHOW BILL
+    output.delete("1.0", tk.END)
+    output.insert(tk.END, bill)
+
+    # QR CODE
+    qr_code = qrcode.QRCode(
+        version=1,
+        error_correction=qrcode.constants.ERROR_CORRECT_M,
+        box_size=6,
+        border=2
+    )
+
+    qr_code.add_data(bill)
+    qr_code.make(fit=True)
+    qr_code.make_image().save("bill_qr.png")
+
+    # PILLOW QR SIZE
+    img = Image.open("bill_qr.png")
+    img = img.resize((270, 270), Image.Resampling.NEAREST)
+
+    qr_img = ImageTk.PhotoImage(img)
+    qr.config(image=qr_img, text="")
+    qr.image = qr_img
+
+    # VOICE
+    voice.say(f"Your total bill is {grand} rupees")
+    voice.runAndWait()
+
+    # WHATSAPP
+    url = (
+        "https://web.whatsapp.com/send?"
+        f"phone=91{mobile}&"
+        f"text={urllib.parse.quote(bill)}"
+    )
+    webbrowser.open(url)
+
+    messagebox.showinfo(
+        "Success",
+        f"Bill Generated!\nBill ID: {bill_id}"
+    )
+
+
+# CLEAR
+def clear():
+    cart.clear()
+    shopping.delete("1.0", tk.END)
+    output.delete("1.0", tk.END)
+
+    customer.delete(0, tk.END)
+    phone.delete(0, tk.END)
+
+    quantity.delete(0, tk.END)
+    quantity.insert(0, "1")
+
+    sub.config(text="Subtotal    : Rs.0.00")
+    tax.config(text="GST 5%      : Rs.0.00")
+    total.config(text="Grand Total : Rs.0.00")
+
+    qr.config(image="", text="QR Code\nwill appear here")
+    qr.image = None
+
+
+# WINDOW
+root = tk.Tk()
+root.title("DMART Billing System")
+root.geometry("1000x750")
+root.configure(bg="#F2F2F2")
+
+
+# TITLE
+tk.Label(
+    root,
+    text="DMART SUPERMARKET BILLING SYSTEM",
+    font=("Arial", 22, "bold"),
+    bg="#1F4E78",
+    fg="white",
+    pady=12
+).pack(fill="x")
+
+
+# CUSTOMER
+frame = tk.Frame(root, bg="#F2F2F2")
+frame.pack(pady=10)
+
+tk.Label(
+    frame, text="Customer:",
+    font=("Arial", 12, "bold"),
+    bg="#F2F2F2"
+).grid(row=0, column=0)
+
+customer = tk.Entry(frame, width=25, font=("Arial", 12))
+customer.grid(row=0, column=1, padx=5)
+
+tk.Label(
+    frame, text="Mobile:",
+    font=("Arial", 12, "bold"),
+    bg="#F2F2F2"
+).grid(row=1, column=0)
+
+phone = tk.Entry(frame, width=25, font=("Arial", 12))
+phone.grid(row=1, column=1, padx=5, pady=5)
+
+
+# PRODUCT
+product = ttk.Combobox(
+    root,
+    width=35,
+    state="readonly",
+    values=[
+        f"{i} - {n} - Rs.{p}"
+        for i, (n, p) in products.items()
+    ]
+)
+product.current(0)
+product.pack(pady=5)
+
+
+# QUANTITY
+quantity = tk.Entry(root, width=8)
+quantity.insert(0, "1")
+quantity.pack()
+
+
+# BUTTONS
+buttons = tk.Frame(root, bg="#F2F2F2")
+buttons.pack(pady=8)
+
+tk.Button(
+    buttons,
+    text="ADD PRODUCT",
+    command=add,
+    bg="#28A745",
+    fg="white",
+    font=("Arial", 11, "bold")
+).grid(row=0, column=0, padx=5)
+
+tk.Button(
+    buttons,
+    text="CLEAR",
+    command=clear,
+    bg="#DC3545",
+    fg="white",
+    font=("Arial", 11, "bold")
+).grid(row=0, column=1, padx=5)
+
+
+# SHOPPING
+shopping = tk.Text(
+    root,
+    height=4,
+    width=70,
+    font=("Courier New", 10)
+)
+shopping.pack()
+
+
+# TOTALS
+sub = tk.Label(
+    root, text="Subtotal    : Rs.0.00",
+    font=("Arial", 12, "bold"),
+    bg="#F2F2F2"
+)
+sub.pack()
+
+tax = tk.Label(
+    root, text="GST 5%      : Rs.0.00",
+    font=("Arial", 12, "bold"),
+    bg="#F2F2F2"
+)
+tax.pack()
+
+total = tk.Label(
+    root, text="Grand Total : Rs.0.00",
+    font=("Arial", 15, "bold"),
+    bg="#FFD966"
+)
+total.pack(pady=5)
+
+
+# GENERATE BUTTON
+tk.Button(
+    root,
+    text="GENERATE BILL + QR + WHATSAPP",
+    command=generate,
+    bg="#25D366",
+    fg="white",
+    font=("Arial", 12, "bold"),
+    padx=15,
+    pady=8
+).pack(pady=7)
+
+
+# RESULT
+result = tk.Frame(root, bg="#F2F2F2")
+result.pack(fill="both", expand=True, padx=20)
+
+
+# BILL
+left = tk.Frame(result, bg="#F2F2F2")
+left.pack(side="left", fill="both", expand=True, padx=10)
+
+tk.Label(
+    left,
+    text="GENERATED BILL",
+    bg="#1F4E78",
+    fg="white",
+    font=("Arial", 12, "bold")
+).pack(fill="x")
+
+output = tk.Text(
+    left,
+    height=15,
+    width=55,
+    font=("Courier New", 9)
+)
+output.pack(pady=5, fill="both", expand=True)
+
+
+# QR
+right = tk.Frame(result, bg="#F2F2F2")
+right.pack(side="right", fill="both", expand=True, padx=10)
+
+tk.Label(
+    right,
+    text="BILL QR CODE",
+    bg="#1F4E78",
+    fg="white",
+    font=("Arial", 12, "bold")
+).pack(fill="x")
+
+qr_area = tk.Frame(
+    right,
+    bg="white",
+    width=350,
+    height=350
+)
+qr_area.pack(pady=20)
+qr_area.pack_propagate(False)
+
+qr = tk.Label(
+    qr_area,
+    text="QR Code\nwill appear here",
+    bg="white",
+    font=("Arial", 12, "bold")
+)
+qr.pack(expand=True)
+
+tk.Label(
+    right,
+    text="Scan this QR code to view the bill",
+    bg="#F2F2F2",
+    font=("Arial", 10, "bold")
+).pack()
+
+
+root.mainloop()
